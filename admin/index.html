@@ -1,11 +1,250 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8">
-<title>Admin Login</title>
+    <meta charset="UTF-8">
+    <title>تسجيل الدخول - لوحة إدارة منتدى مستقبل حضرموت</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Same fonts & icons as main site -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #2c5aa0 0%, #2d7840 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+        }
+
+        .admin-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 15px;
+        }
+
+        .admin-card {
+            background-color: #f7f2e6;
+            border-radius: 16px;
+            max-width: 420px;
+            width: 100%;
+            padding: 30px 24px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.18);
+        }
+
+        .admin-card-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .admin-logo {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #c53030, #d69e2e);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            color: #fff;
+            font-size: 1.6rem;
+        }
+
+        .admin-card-header h1 {
+            font-size: 1.4rem;
+            color: #2d3748;
+            margin-bottom: 4px;
+        }
+
+        .admin-card-header p {
+            font-size: 0.95rem;
+            color: #4a5568;
+        }
+
+        .admin-form-group {
+            margin-bottom: 16px;
+        }
+
+        .admin-form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.95rem;
+            color: #2d3748;
+            font-weight: 600;
+        }
+
+        .admin-input-wrapper {
+            position: relative;
+        }
+
+        .admin-input-wrapper i {
+            position: absolute;
+            top: 50%;
+            left: 12px;
+            transform: translateY(-50%);
+            color: #a0aec0;
+            font-size: 0.9rem;
+        }
+
+        .admin-input {
+            width: 100%;
+            border-radius: 999px;
+            border: 1px solid #cbd5e0;
+            padding: 10px 40px 10px 14px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.2s ease;
+            direction: rtl;
+        }
+
+        .admin-input:focus {
+            border-color: #2c5aa0;
+            box-shadow: 0 0 0 2px rgba(44,90,160,0.25);
+        }
+
+        .password-toggle {
+            position: absolute;
+            top: 50%;
+            right: 12px;
+            transform: translateY(-50%);
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            color: #a0aec0;
+        }
+
+        .admin-btn {
+            width: 100%;
+            border-radius: 999px;
+            border: none;
+            padding: 11px 0;
+            margin-top: 8px;
+            background: linear-gradient(135deg, #d69e2e, #c53030);
+            color: #fff;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .admin-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(0,0,0,0.18);
+        }
+
+        .admin-hint {
+            margin-top: 14px;
+            font-size: 0.8rem;
+            color: #718096;
+            text-align: center;
+        }
+
+        .admin-error {
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: #c53030;
+            text-align: center;
+            display: none;
+        }
+
+        .admin-success {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #2f855a;
+            text-align: center;
+            display: none;
+        }
+
+        @media (max-width: 480px) {
+            .admin-card {
+                padding: 24px 18px;
+            }
+
+            .admin-card-header h1 {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
 </head>
 <body>
-<h2>لوحة التحكم - محمية</h2>
-<p>الرجاء إدخال كلمة المرور للمتابعة.</p>
+    <div class="admin-wrapper">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <div class="admin-logo">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <h1>تسجيل دخول الإدارة</h1>
+                <p>هذه الصفحة مخصصة لفريق منتدى مستقبل حضرموت فقط.</p>
+            </div>
+            <form id="admin-login-form">
+                <div class="admin-form-group">
+                    <label for="username">اسم المستخدم</label>
+                    <div class="admin-input-wrapper">
+                        <i class="fas fa-user"></i>
+                        <input id="username" type="text" class="admin-input" autocomplete="username" placeholder="أدخل اسم المستخدم">
+                    </div>
+                </div>
+                <div class="admin-form-group">
+                    <label for="password">كلمة المرور</label>
+                    <div class="admin-input-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input id="password" type="password" class="admin-input" autocomplete="current-password" placeholder="أدخل كلمة المرور">
+                        <button type="button" class="password-toggle" id="togglePassword">
+                            <i class="far fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" class="admin-btn">تسجيل الدخول</button>
+                <div class="admin-error" id="admin-error">اسم المستخدم أو كلمة المرور غير صحيحة.</div>
+                <div class="admin-success" id="admin-success">تم تسجيل الدخول بنجاح.</div>
+                <p class="admin-hint">لأي مشكلة تقنية، راسلنا على البريد: info@hadhramautfutureforum.com</p>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const USERNAME = "admin";
+            const PASSWORD = "hff123";
+
+            const form = document.getElementById('admin-login-form');
+            const userInput = document.getElementById('username');
+            const passInput = document.getElementById('password');
+            const errorBox = document.getElementById('admin-error');
+            const successBox = document.getElementById('admin-success');
+            const toggleBtn = document.getElementById('togglePassword');
+
+            toggleBtn.addEventListener('click', function() {
+                const type = passInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passInput.setAttribute('type', type);
+                this.innerHTML = type === 'password'
+                    ? '<i class="far fa-eye"></i>'
+                    : '<i class="far fa-eye-slash"></i>';
+            });
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                errorBox.style.display = 'none';
+                successBox.style.display = 'none';
+
+                const u = (userInput.value || "").trim();
+                const p = (passInput.value || "").trim();
+
+                if (u === USERNAME && p === PASSWORD) {
+                    successBox.style.display = 'block';
+                    // simple redirect for now to home (can be changed to dashboard later)
+                    setTimeout(function() {
+                        window.location.href = "../index.html";
+                    }, 800);
+                } else {
+                    errorBox.style.display = 'block';
+                }
+            });
+        })();
+    </script>
 </body>
 </html>
