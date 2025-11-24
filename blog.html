@@ -9,8 +9,90 @@
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="css/style.css">
+
+  <style>
+    html, body {
+      height: 100%;
+    }
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    main {
+      flex: 1;
+    }
+
+    .blog-wrapper {
+      max-width: 1200px;
+      margin: 40px auto 60px;
+      padding: 0 16px;
+    }
+    .blog-title {
+      font-size: 26px;
+      margin-bottom: 20px;
+      text-align: right;
+    }
+    .blog-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+    }
+    .blog-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      text-align: right;
+    }
+    .blog-card h3 {
+      margin: 0 0 6px;
+      font-size: 20px;
+    }
+    .blog-card .blog-author {
+      margin: 0 0 10px;
+      font-size: 14px;
+      color: #666;
+    }
+    .blog-card p {
+      margin: 0 0 12px;
+      font-size: 15px;
+      color: #333;
+      line-height: 1.7;
+    }
+    .blog-card a {
+      font-size: 14px;
+      font-weight: 600;
+      color: #0b6c8e;
+      text-decoration: none;
+    }
+
+    /* Fake loading box */
+    .loading-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 50px 0;
+      gap: 12px;
+      color: #333;
+      font-size: 15px;
+    }
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 3px solid #000;
+      border-top-color: transparent;
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 <body>
+  <!-- HEADER (same as index.html) -->
   <header>
     <div class="container">
       <div class="header-content">
@@ -21,7 +103,8 @@
             <p>Hadhramout Future Forum</p>
           </div>
         </a>
-        <div class="menu-toggle" id="menu-toggle"><span></span><span></span><span></span></div><nav>
+        <div class="menu-toggle" id="menu-toggle"><span></span><span></span><span></span></div>
+        <nav>
           <ul>
             <li><a href="vision.html">الرؤية</a></li>
             <li><a href="goals.html">الأهداف</a></li>
@@ -30,92 +113,131 @@
             <li><a href="contact.html">تواصل معنا</a></li>
             <li><a href="blog.html">المقالات</a></li>
             <li><a href="reports.html">التقارير</a></li>
-          <li><a href="admin/index.html" title="لوحة التحكم"><i class="fas fa-gear"></i></a></li></ul>
+            <li><a href="admin/index.html" title="لوحة التحكم"><i class="fas fa-gear"></i></a></li>
+          </ul>
         </nav>
       </div>
     </div>
   </header>
 
-  <main class="page">
-    <div class="container">
-      <div class="section-title"><h2>المقالات</h2></div>
-      <div id="blog-list" class="cards-container"></div>
-      
-    </div>
+  <main>
+    <section class="blog-wrapper">
+      <h2 class="blog-title">المقالات</h2>
+
+      <!-- Fake loading -->
+      <div id="blog-loading" class="loading-box">
+        <div class="loading-spinner"></div>
+        <p>جارٍ تحميل المقالات...</p>
+      </div>
+
+      <div id="blog-grid" class="blog-grid" style="display:none;"></div>
+    </section>
   </main>
 
+  <!-- FOOTER (same as index.html) -->
   <footer>
     <div class="container">
-      <div class="copyright"><p>جميع الحقوق محفوظة &copy; 2025 منتدى مستقبل حضرموت</p></div>
+      <div class="footer-content">
+        <div class="footer-about">
+          <div class="footer-logo">
+            <img src="assets/logo.jpg" alt="HFF" class="footer-logo-img"/>
+            <h3>منتدى مستقبل حضرموت</h3>
+            <p>Hadhramout Future Forum</p>
+          </div>
+          <p>منصة فكرية حضرمية مستقلة تُعنى بصياغة الرؤى والسياسات والمبادرات من أجل مستقبلٍ مزدهرٍ لحضرموت.</p>
+          <div class="social-links">
+            <a href="https://x.com/HadhramoutForum" target="_blank" rel="noopener"><i class="fab fa-twitter"></i></a>
+            <a href="#"><i class="fab fa-facebook-f"></i></a>
+            <a href="#"><i class="fab fa-instagram"></i></a>
+            <a href="#"><i class="fab fa-linkedin-in"></i></a>
+            <a href="#"><i class="fab fa-youtube"></i></a>
+          </div>
+        </div>
+        <div class="footer-links">
+          <h4>روابط</h4>
+          <ul>
+            <li><a href="index.html">الرئيسية</a></li>
+            <li><a href="vision.html">الرؤية</a></li>
+            <li><a href="goals.html">الأهداف</a></li>
+            <li><a href="approach.html">آليات العمل</a></li>
+            <li><a href="philosophy.html">فلسفة الشعار</a></li>
+            <li><a href="contact.html">تواصل معنا</a></li>
+          </ul>
+        </div>
+        <div class="footer-contact">
+          <h4 id="contact">تواصل معنا</h4>
+          <ul>
+            <li><i class="fas fa-envelope"></i> info@hadhramautfutureforum.com</li>
+            <li><i class="fas fa-map-marker-alt"></i> المكلا، حضرموت، اليمن</li>
+          </ul>
+        </div>
+      </div>
+      <div class="copyright">
+        <p>جميع الحقوق محفوظة &copy; 2025 منتدى مستقبل حضرموت</p>
+      </div>
     </div>
   </footer>
-  
-<script src="js/script.js"></script>
-<script src="js/script.js"></script>
-<script>
-(function () {
-  const API_URL = "https://script.google.com/macros/s/AKfycbzrrCg2VRAXuXXCaFEoJXDa3CxfQBpWEa9IHjG4cakHGgmEgE2rstkKe-ryufD2YkdW/exec";
-  const wrap = document.getElementById("blog-list"); // تأكد الـ div عندك id="blog-list"
-  if (!wrap) return;
 
-  function renderFromApi(items) {
-    if (!items || !items.length) {
-      wrap.innerHTML = "<p>لا توجد مقالات حالياً.</p>";
-      return;
-    }
-    let html = "";
-    items.forEach(it => {
-      const title = it.title || "";
-      const body = (it.main || "").replace(/\n/g, "<br>");
-      html +=
-        '<article class="blog-card">' +
-        "<h2>" + title + "</h2>" +
-        "<p>" + body + "</p>" +
-        "</article>";
-    });
-    wrap.innerHTML = html;
-  }
+  <script src="js/script.js"></script>
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbzrrCg2VRAXuXXCaFEoJXDa3CxfQBpWEa9IHjG4cakHGgmEgE2rstkKe-ryufD2YkdW/exec";
 
-  function renderFallback() {
-    fetch("content/blog/posts.json")
-      .then(r => r.json())
-      .then(items => {
-        if (!Array.isArray(items) || !items.length) {
-          wrap.innerHTML = "<p>لا توجد مقالات حالياً.</p>";
-          return;
-        }
-        let html = "";
-        items.forEach(it => {
-          const title = it.title || "";
-          const body = (it.content || "").replace(/\n/g, "<br>");
-          html +=
-            '<article class="blog-card">' +
-            "<h2>" + title + "</h2>" +
-            "<p>" + body + "</p>" +
-            "</article>";
-        });
-        wrap.innerHTML = html;
-      })
-      .catch(() => {
-        wrap.innerHTML = "<p>تعذر تحميل المقالات حالياً.</p>";
-      });
-  }
+    let blogItems = [];
+    let blogLoaded = false;
+    let blogDelayDone = false;
 
-  fetch(API_URL + "?type=blog")
-    .then(r => r.json())
-    .then(data => {
-      if (data && Array.isArray(data.items) && data.items.length) {
-        renderFromApi(data.items);
-      } else {
-        renderFallback();
+    function renderBlogsIfReady() {
+      if (!blogLoaded || !blogDelayDone) return;
+
+      const loadingBox = document.getElementById("blog-loading");
+      const grid = document.getElementById("blog-grid");
+      loadingBox.style.display = "none";
+      grid.style.display = "grid";
+
+      if (!blogItems.length) {
+        grid.innerHTML = "<p>لا توجد مقالات حالياً.</p>";
+        return;
       }
-    })
-    .catch(() => {
-      renderFallback();
-    });
-})();
-</script>
 
+      grid.innerHTML = "";
+      blogItems.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "blog-card";
 
+        const title  = item.title  || "";
+        const author = item.author || "";
+        const snippet = (item.main || "").slice(0, 160) + ((item.main || "").length > 160 ? "..." : "");
+
+        card.innerHTML = `
+          <h3>${title}</h3>
+          ${author ? `<p class="blog-author">بقلم ${author}</p>` : ""}
+          <p>${snippet}</p>
+          <a href="blog-view.html?id=${item.id}">اقرأ المزيد</a>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    async function fetchBlogs() {
+      try {
+        const res = await fetch(API_URL + "?type=blog");
+        const data = await res.json();
+        blogItems = Array.isArray(data.items) ? data.items : [];
+      } catch (e) {
+        console.error(e);
+        blogItems = [];
+      }
+      blogLoaded = true;
+      renderBlogsIfReady();
+    }
+
+    // fake loading 6.5 seconds
+    setTimeout(() => {
+      blogDelayDone = true;
+      renderBlogsIfReady();
+    }, 6500);
+
+    fetchBlogs();
+  </script>
 </body>
 </html>

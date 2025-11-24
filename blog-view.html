@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>التقارير - منتدى مستقبل حضرموت</title>
+  <title>عرض المقال - منتدى مستقبل حضرموت</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -19,57 +19,39 @@
       display: flex;
       flex-direction: column;
     }
-    main { flex: 1; }
+    main {
+      flex: 1;
+    }
 
-    .reports-wrapper {
-      max-width: 1200px;
+    .blog-view-wrapper {
+      max-width: 900px;
       margin: 40px auto 60px;
       padding: 0 16px;
-    }
-    .reports-title {
-      font-size: 26px;
-      margin-bottom: 20px;
       text-align: right;
     }
-    .reports-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 24px;
+    .blog-view-title {
+      font-size: 28px;
+      margin-bottom: 10px;
     }
-    .report-card {
-      background: #fff;
-      border-radius: 14px;
-      padding: 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      text-align: right;
-    }
-    .report-card h3 {
-      margin: 0 0 10px;
-      font-size: 20px;
-    }
-    .report-card p {
-      margin: 0 0 12px;
+    .blog-view-author {
       font-size: 15px;
-      color: #333;
-      line-height: 1.7;
+      color: #555;
+      margin-bottom: 18px;
     }
-    .report-card button {
-      padding: 8px 16px;
-      border-radius: 999px;
-      border: none;
-      background: #0b6c8e;
-      color: #fff;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
+    .blog-view-body {
+      font-size: 16px;
+      line-height: 2;
+      color: #222;
+      white-space: pre-wrap;
     }
 
+    /* fake loading */
     .loading-box {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 50px 0;
+      padding: 60px 0;
       gap: 12px;
       color: #333;
       font-size: 15px;
@@ -84,6 +66,13 @@
     }
     @keyframes spin {
       to { transform: rotate(360deg); }
+    }
+
+    .blog-empty {
+      text-align: center;
+      padding: 40px 0;
+      font-size: 16px;
+      color: #444;
     }
   </style>
 </head>
@@ -117,16 +106,22 @@
   </header>
 
   <main>
-    <section class="reports-wrapper">
-      <h2 class="reports-title">التقارير</h2>
-
-      <!-- Fake loading -->
-      <div id="reports-loading" class="loading-box">
+    <section class="blog-view-wrapper">
+      <!-- fake loading -->
+      <div id="blog-loading" class="loading-box">
         <div class="loading-spinner"></div>
-        <p>جارٍ تحميل التقارير...</p>
+        <p>جارٍ تحميل المقال...</p>
       </div>
 
-      <div id="reports-grid" class="reports-grid" style="display:none;"></div>
+      <article id="blog-article" style="display:none;">
+        <h1 id="blog-title" class="blog-view-title"></h1>
+        <p id="blog-author" class="blog-view-author"></p>
+        <div id="blog-body" class="blog-view-body"></div>
+      </article>
+
+      <div id="blog-empty" class="blog-empty" style="display:none;">
+        لم يتم العثور على هذا المقال.
+      </div>
     </section>
   </main>
 
@@ -178,79 +173,67 @@
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbzrrCg2VRAXuXXCaFEoJXDa3CxfQBpWEa9IHjG4cakHGgmEgE2rstkKe-ryufD2YkdW/exec";
 
-    let reportItems = [];
-    let reportsLoaded = false;
-    let reportsDelayDone = false;
+    let blogItem = null;
+    let dataLoaded = false;
+    let delayDone = false;
 
-    function renderReportsIfReady() {
-      if (!reportsLoaded || !reportsDelayDone) return;
+    function renderIfReady() {
+      if (!dataLoaded || !delayDone) return;
 
-      const loadingBox = document.getElementById("reports-loading");
-      const grid = document.getElementById("reports-grid");
-      loadingBox.style.display = "none";
-      grid.style.display = "grid";
+      const loadingEl = document.getElementById("blog-loading");
+      const articleEl = document.getElementById("blog-article");
+      const emptyEl = document.getElementById("blog-empty");
 
-      if (!reportItems.length) {
-        grid.innerHTML = "<p>لا توجد تقارير حالياً.</p>";
+      loadingEl.style.display = "none";
+
+      if (!blogItem) {
+        emptyEl.style.display = "block";
         return;
       }
 
-      grid.innerHTML = "";
-      reportItems.forEach(item => {
-        const card = document.createElement("div");
-        card.className = "report-card";
+      document.getElementById("blog-title").textContent = blogItem.title || "";
 
-        const title = item.title || "";
-        const desc  = item.description || "";
-        const url   = item.main || "";
-        const pw    = item.password || "";
+      const author = blogItem.author || "";
+      document.getElementById("blog-author").textContent = author ? ("بقلم " + author) : "";
 
-        card.innerHTML = `
-          <h3>${title}</h3>
-          <p>${desc}</p>
-          <button onclick="downloadReport('${url}','${pw}')">
-            ${pw ? "تنزيل (محمي)" : "تنزيل"}
-          </button>
-        `;
+      const bodyEl = document.getElementById("blog-body");
+      const content = blogItem.main || "";
+      bodyEl.innerHTML = content.replace(/\n/g, "<br>");
 
-        grid.appendChild(card);
-      });
+      articleEl.style.display = "block";
     }
 
-    async function fetchReports() {
+    async function fetchBlog() {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get("id");
+
+      if (!id) {
+        dataLoaded = true;
+        renderIfReady();
+        return;
+      }
+
       try {
-        const res = await fetch(API_URL + "?type=report");
+        const res = await fetch(API_URL + "?type=blog");
         const data = await res.json();
-        reportItems = Array.isArray(data.items) ? data.items : [];
+        const items = Array.isArray(data.items) ? data.items : [];
+        blogItem = items.find(it => String(it.id) === String(id)) || null;
       } catch (e) {
         console.error(e);
-        reportItems = [];
+        blogItem = null;
       }
-      reportsLoaded = true;
-      renderReportsIfReady();
+
+      dataLoaded = true;
+      renderIfReady();
     }
 
-    function downloadReport(url, pw) {
-      if (!url) return;
-      if (!pw) {
-        window.location.href = url;
-        return;
-      }
-      const entered = window.prompt("أدخل كلمة المرور:");
-      if (entered === pw) {
-        window.location.href = url;
-      } else {
-        alert("كلمة المرور غير صحيحة");
-      }
-    }
-
-    // fake loading 6.5 seconds
+    // fake 6.5s delay
     setTimeout(() => {
-      reportsDelayDone = true;
-      renderReportsIfReady();
+      delayDone = true;
+      renderIfReady();
     }, 6500);
 
-    fetchReports();
+    fetchBlog();
   </script>
 </body>
 </html>

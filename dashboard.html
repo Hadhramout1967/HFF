@@ -236,11 +236,17 @@
                         <label for="blog-title">عنوان المقال</label>
                         <input type="text" id="blog-title" class="admin-input" required>
                     </div>
+<div class="form-group">
+  <label for="blog-author">بقلم الكاتب (اختياري)</label>
+  <input type="text" id="blog-author">
+</div>
                     <div class="admin-form-group">
                         <label for="blog-content">محتوى المقال</label>
                         <textarea id="blog-content" class="admin-textarea" required></textarea>
                     </div>
                     <div class="admin-form-group">
+                        <label for="blog-image">صورة المقال (اختياري)</label>
+                        <input type="file" id="blog-image" class="admin-input" accept="image/*">
                     </div>
                     <button type="submit" class="admin-button">حفظ المقال</button>
                 <label>بقلم الكاتب (اختياري)</label><input id="blogAuthor" type="text" /></form>
@@ -274,7 +280,7 @@
                         <input type="password" id="report-password" class="admin-input">
                     </div>
                     <button type="submit" class="admin-button">حفظ التقرير</button>
-                </form>
+                <label>بقلم الكاتب (اختياري)</label><input id="blogAuthor" type="text" /></form>
                 <div id="report-message" class="admin-message"></div>
                 <h3 class="admin-list-title">التقارير المحفوظة (عبر قاعدة البيانات المشتركة)</h3>
                 <ul id="report-list" class="admin-report-list"></ul>
@@ -386,6 +392,7 @@
       blogMessage.classList.remove("success", "error");
 
       const title = (document.getElementById("blog-title").value || "").trim();
+      const author = (document.getElementById("blog-author").value || "").trim();
       const content = (document.getElementById("blog-content").value || "").trim();
 
       if (!title || !content) {
@@ -398,7 +405,8 @@
         await apiPost({
           action: "add",
           type: "blog",
-          title: title, author: document.getElementById('blogAuthor').value,
+          title: title,
+          author: author,
           main: content
         });
         blogMessage.textContent = "تم حفظ المقال في قاعدة البيانات.";
@@ -508,7 +516,8 @@
         await apiPost({
           action: "add",
           type: "report",
-          title: title, author: document.getElementById('blogAuthor').value,
+          title: title,
+          author: author,
           main: link,
           description: desc,
           password: password
