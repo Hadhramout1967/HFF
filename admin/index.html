@@ -235,6 +235,11 @@
                 const p = (passInput.value || "").trim();
 
                 if (u === USERNAME && p === PASSWORD) {
+                    // تخزين حالة تسجيل الدخول في المتصفح
+                    try {
+                        localStorage.setItem('hffAdminAuth', '1');
+                    } catch (e) {}
+
                     successBox.style.display = 'block';
                     // simple redirect for now to home (can be changed to dashboard later)
                     setTimeout(function() {

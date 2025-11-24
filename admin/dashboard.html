@@ -291,6 +291,21 @@
     </div>
 </main>
 
+
+<script>
+// منع الوصول المباشر إلى لوحة التحكم بدون تسجيل دخول
+(function () {
+  try {
+    var ok = localStorage.getItem('hffAdminAuth');
+    if (ok !== '1') {
+      window.location.href = 'index.html';
+    }
+  } catch (e) {
+    window.location.href = 'index.html';
+  }
+})();
+</script>
+
 <script>
 (function () {
     const API_URL = "https://script.google.com/macros/s/AKfycbzrrCg2VRAuXXCaFEoJXDa3CxfQBpWEa9IHjG4cakHGgmEgE2rsttKe-ryufD2YkdW/exec";
