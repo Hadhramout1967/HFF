@@ -278,7 +278,7 @@
                     <button type="submit" class="admin-button">حفظ التقرير</button>
                 </form>
                 <div id="report-message" class="admin-message"></div>
-                <h3 class="admin-list-title">التقارير المحفوظة (على هذا المتصفح فقط)</h3>
+                <h3 class="admin-list-title">التقارير المحفوظة (عبر قاعدة البيانات المشتركة)</h3>
                 <ul id="report-list" class="admin-report-list"></ul>
 
                 <h3 class="admin-list-title">حذف تقرير</h3>
@@ -290,237 +290,246 @@
         </div>
     </div>
 </main>
+
 <script>
-    // زر تسجيل الخروج + إدارة النماذج
-    (function () {
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', function () {
-                // عند تسجيل الخروج نرجع للصفحة الرئيسية للموقع
-                window.location.href = "../index.html";
-            });
+(function () {
+    const API_URL = "https://script.google.com/macros/s/AKfycbzrrCg2VRAuXXCaFEoJXDa3CxfQBpWEa9IHjG4cakHGgmEgE2rsttKe-ryufD2YkdW/exec";
+
+    // زر تسجيل الخروج
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function () {
+            window.location.href = "../index.html";
+        });
+    }
+
+    async function apiPost(body) {
+        const res = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+        });
+        try {
+            return await res.json();
+        } catch (e) {
+            return {};
         }
+    }
 
-        // ========= إدارة المقالات =========
-        const blogForm = document.getElementById('blog-form');
-        const blogMessage = document.getElementById('blog-message');
-        const blogDeleteSelect = document.getElementById('blog-delete-select');
-        const blogDeleteBtn = document.getElementById('blog-delete-btn');
-
-        function getBlogs() {
-            try {
-                const arr = JSON.parse(localStorage.getItem('blogs') || '[]');
-                return Array.isArray(arr) ? arr : [];
-            } catch (e) {
-                return [];
-            }
+    async function apiGet(type) {
+        const res = await fetch(API_URL + "?type=" + encodeURIComponent(type));
+        try {
+            const data = await res.json();
+            return Array.isArray(data.items) ? data.items : [];
+        } catch (e) {
+            return [];
         }
+    }
 
-        function saveBlogs(arr) {
-            localStorage.setItem('blogs', JSON.stringify(arr || []));
+    // ========= إدارة المقالات =========
+    const blogForm = document.getElementById('blog-form');
+    const blogMessage = document.getElementById('blog-message');
+    const blogDeleteSelect = document.getElementById('blog-delete-select');
+    const blogDeleteBtn = document.getElementById('blog-delete-btn');
+
+    async function loadBlogs() {
+        if (!blogDeleteSelect) return;
+        blogDeleteSelect.innerHTML = "";
+        const items = await apiGet("blog");
+        if (!items.length) {
+            const opt = document.createElement('option');
+            opt.value = "";
+            opt.textContent = "لا توجد مقالات محفوظة";
+            blogDeleteSelect.appendChild(opt);
+            blogDeleteSelect.disabled = true;
+            if (blogDeleteBtn) blogDeleteBtn.disabled = true;
+            return;
         }
+        blogDeleteSelect.disabled = false;
+        if (blogDeleteBtn) blogDeleteBtn.disabled = false;
+        items.forEach(function (it) {
+            const opt = document.createElement('option');
+            opt.value = String(it.id);
+            opt.textContent = it.title || ("مقال #" + it.id);
+            blogDeleteSelect.appendChild(opt);
+        });
+    }
 
-        function refreshBlogDeleteOptions() {
-            if (!blogDeleteSelect || !blogDeleteBtn) return;
-            const blogs = getBlogs();
-            blogDeleteSelect.innerHTML = "";
+    if (blogForm && blogMessage) {
+        blogForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            blogMessage.textContent = "";
+            blogMessage.classList.remove('success', 'error');
 
-            if (!blogs.length) {
-                const opt = document.createElement('option');
-                opt.value = "";
-                opt.textContent = "لا توجد مقالات محفوظة";
-                blogDeleteSelect.appendChild(opt);
-                blogDeleteSelect.disabled = true;
-                blogDeleteBtn.disabled = true;
+            const title = (document.getElementById('blog-title').value || "").trim();
+            const content = (document.getElementById('blog-content').value || "").trim();
+
+            if (!title || !content) {
+                blogMessage.textContent = "الرجاء تعبئة عنوان ومحتوى المقال.";
+                blogMessage.classList.add('error');
                 return;
             }
 
-            blogDeleteSelect.disabled = false;
-            blogDeleteBtn.disabled = false;
-
-            blogs.forEach(function (b, index) {
-                const opt = document.createElement('option');
-                opt.value = String(index);
-                opt.textContent = b.title || ("مقال #" + (index + 1));
-                blogDeleteSelect.appendChild(opt);
-            });
-        }
-
-        if (blogForm && blogMessage) {
-            blogForm.addEventListener('submit', function (e) {
-                e.preventDefault();
-                blogMessage.textContent = "";
-                blogMessage.classList.remove('success', 'error');
-
-                const title = (document.getElementById('blog-title').value || "").trim();
-                const content = (document.getElementById('blog-content').value || "").trim();
-
-                if (!title || !content) {
-                    blogMessage.textContent = "الرجاء تعبئة عنوان ومحتوى المقال.";
-                    blogMessage.classList.add('error');
-                    return;
-                }
-
-                const blogs = getBlogs();
-                blogs.push({
+            try {
+                await apiPost({
+                    action: "add",
+                    type: "blog",
                     title: title,
-                    content: content,
-                    date: new Date().toISOString()
+                    main: content
                 });
-                saveBlogs(blogs);
-
-                blogMessage.textContent = "تم حفظ المقال (محفوظ في هذا المتصفح فقط).";
+                blogMessage.textContent = "تم حفظ المقال في قاعدة البيانات.";
                 blogMessage.classList.add('success');
                 blogForm.reset();
-                refreshBlogDeleteOptions();
+                loadBlogs();
                 setTimeout(function () {
                     blogMessage.textContent = "";
                     blogMessage.classList.remove('success');
                 }, 2500);
-            });
-        }
+            } catch (err) {
+                console.error(err);
+                blogMessage.textContent = "حدث خطأ أثناء الحفظ.";
+                blogMessage.classList.add('error');
+            }
+        });
+    }
 
-        if (blogDeleteBtn && blogDeleteSelect && blogMessage) {
-            blogDeleteBtn.addEventListener('click', function () {
-                const val = blogDeleteSelect.value;
-                if (val === "") return;
-                const idx = parseInt(val, 10);
-                const blogs = getBlogs();
-                if (isNaN(idx) || idx < 0 || idx >= blogs.length) return;
-
-                if (!window.confirm("هل أنت متأكد من حذف هذا المقال؟")) return;
-
-                blogs.splice(idx, 1);
-                saveBlogs(blogs);
-                refreshBlogDeleteOptions();
+    if (blogDeleteBtn && blogDeleteSelect && blogMessage) {
+        blogDeleteBtn.addEventListener('click', async function () {
+            const val = blogDeleteSelect.value;
+            if (!val) return;
+            if (!window.confirm("هل أنت متأكد من حذف هذا المقال؟")) return;
+            try {
+                await apiPost({ action: "delete", id: val });
                 blogMessage.textContent = "تم حذف المقال.";
                 blogMessage.classList.remove('error');
                 blogMessage.classList.add('success');
+                await loadBlogs();
                 setTimeout(function () {
                     blogMessage.textContent = "";
                     blogMessage.classList.remove('success');
                 }, 2000);
-            });
-        }
-
-        refreshBlogDeleteOptions();
-
-        // ========= إدارة التقارير (رابط فقط) =========
-        const reportForm = document.getElementById('report-form');
-        const reportMessage = document.getElementById('report-message');
-        const reportList = document.getElementById('report-list');
-        const reportDeleteSelect = document.getElementById('report-delete-select');
-        const reportDeleteBtn = document.getElementById('report-delete-btn');
-
-        function getReports() {
-            try {
-                const arr = JSON.parse(localStorage.getItem('reports') || '[]');
-                return Array.isArray(arr) ? arr : [];
-            } catch (e) {
-                return [];
+            } catch (err) {
+                console.error(err);
+                blogMessage.textContent = "تعذر حذف المقال.";
+                blogMessage.classList.add('error');
             }
-        }
+        });
+    }
 
-        function saveReports(arr) {
-            localStorage.setItem('reports', JSON.stringify(arr || []));
-        }
+    // ========= إدارة التقارير =========
+    const reportForm = document.getElementById('report-form');
+    const reportMessage = document.getElementById('report-message');
+    const reportList = document.getElementById('report-list');
+    const reportDeleteSelect = document.getElementById('report-delete-select');
+    const reportDeleteBtn = document.getElementById('report-delete-btn');
 
-        function renderReports() {
-            if (!reportList) return;
-            const reports = getReports();
-            reportList.innerHTML = "";
+    async function loadReports() {
+        if (!reportList) return;
+        reportList.innerHTML = "";
+        const items = await apiGet("report");
 
-            reports.forEach(function (r) {
-                const li = document.createElement('li');
-                const url = r.url || "";
-                li.textContent = r.title + " — رابط: " + (url ? url : "غير متوفر") + " — كلمة المرور: " + (r.password || "-");
-                reportList.appendChild(li);
-            });
+        items.forEach(function (r) {
+            const li = document.createElement('li');
+            const url = r.main || "";
+            const pw = r.password || "";
+            li.textContent = (r.title || "تقرير") +
+                " — رابط: " + (url || "غير متوفر") +
+                " — كلمة المرور: " + (pw ? pw : "-");
+            reportList.appendChild(li);
+        });
 
-            if (reportDeleteSelect && reportDeleteBtn) {
-                reportDeleteSelect.innerHTML = "";
-                if (!reports.length) {
+        if (reportDeleteSelect && reportDeleteBtn) {
+            reportDeleteSelect.innerHTML = "";
+            if (!items.length) {
+                const opt = document.createElement('option');
+                opt.value = "";
+                opt.textContent = "لا توجد تقارير محفوظة";
+                reportDeleteSelect.appendChild(opt);
+                reportDeleteSelect.disabled = true;
+                reportDeleteBtn.disabled = true;
+            } else {
+                reportDeleteSelect.disabled = false;
+                reportDeleteBtn.disabled = false;
+                items.forEach(function (r) {
                     const opt = document.createElement('option');
-                    opt.value = "";
-                    opt.textContent = "لا توجد تقارير محفوظة";
+                    opt.value = String(r.id);
+                    opt.textContent = r.title || ("تقرير #" + r.id);
                     reportDeleteSelect.appendChild(opt);
-                    reportDeleteSelect.disabled = true;
-                    reportDeleteBtn.disabled = true;
-                } else {
-                    reportDeleteSelect.disabled = false;
-                    reportDeleteBtn.disabled = false;
-                    reports.forEach(function (r, index) {
-                        const opt = document.createElement('option');
-                        opt.value = String(index);
-                        opt.textContent = r.title || ("تقرير #" + (index + 1));
-                        reportDeleteSelect.appendChild(opt);
-                    });
-                }
+                });
             }
         }
+    }
 
-        if (reportForm && reportMessage && reportList) {
-            renderReports();
-            reportForm.addEventListener('submit', function (e) {
-                e.preventDefault();
-                reportMessage.textContent = "";
-                reportMessage.classList.remove('success', 'error');
+    if (reportForm && reportMessage && reportList) {
+        reportForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            reportMessage.textContent = "";
+            reportMessage.classList.remove('success', 'error');
 
-                const title = (document.getElementById('report-title').value || "").trim();
-                const link = (document.getElementById('report-link').value || "").trim();
-                const desc = (document.getElementById('report-desc').value || "").trim();
-                const password = (document.getElementById('report-password').value || "").trim();
+            const title = (document.getElementById('report-title').value || "").trim();
+            const link = (document.getElementById('report-link').value || "").trim();
+            const desc = (document.getElementById('report-desc').value || "").trim();
+            const password = (document.getElementById('report-password').value || "").trim();
 
-                if (!title || !link) {
-                    reportMessage.textContent = "الرجاء إدخال عنوان التقرير والرابط.";
-                    reportMessage.classList.add('error');
-                    return;
-                }
+            if (!title || !link) {
+                reportMessage.textContent = "الرجاء إدخال عنوان التقرير والرابط.";
+                reportMessage.classList.add('error');
+                return;
+            }
 
-                const reports = getReports();
-                reports.push({
+            try {
+                await apiPost({
+                    action: "add",
+                    type: "report",
                     title: title,
-                    url: link,
+                    main: link,
                     description: desc,
-                    password: password,
-                    date: new Date().toISOString()
+                    password: password
                 });
-                saveReports(reports);
-
-                reportMessage.textContent = "تم حفظ رابط التقرير.";
+                reportMessage.textContent = "تم حفظ رابط التقرير في قاعدة البيانات.";
                 reportMessage.classList.add('success');
                 reportForm.reset();
-                renderReports();
+                await loadReports();
                 setTimeout(function () {
                     reportMessage.textContent = "";
                     reportMessage.classList.remove('success');
                 }, 2500);
-            });
-        }
+            } catch (err) {
+                console.error(err);
+                reportMessage.textContent = "حدث خطأ أثناء الحفظ.";
+                reportMessage.classList.add('error');
+            }
+        });
+    }
 
-        if (reportDeleteBtn && reportDeleteSelect && reportMessage) {
-            reportDeleteBtn.addEventListener('click', function () {
-                const val = reportDeleteSelect.value;
-                if (val === "") return;
-                const idx = parseInt(val, 10);
-                const reports = getReports();
-                if (isNaN(idx) || idx < 0 || idx >= reports.length) return;
-
-                if (!window.confirm("هل أنت متأكد من حذف هذا التقرير؟")) return;
-
-                reports.splice(idx, 1);
-                saveReports(reports);
-                renderReports();
+    if (reportDeleteBtn && reportDeleteSelect && reportMessage) {
+        reportDeleteBtn.addEventListener('click', async function () {
+            const val = reportDeleteSelect.value;
+            if (!val) return;
+            if (!window.confirm("هل أنت متأكد من حذف هذا التقرير؟")) return;
+            try {
+                await apiPost({ action: "delete", id: val });
                 reportMessage.textContent = "تم حذف التقرير.";
                 reportMessage.classList.remove('error');
                 reportMessage.classList.add('success');
+                await loadReports();
                 setTimeout(function () {
                     reportMessage.textContent = "";
                     reportMessage.classList.remove('success');
                 }, 2000);
-            });
-        }
-    })();
+            } catch (err) {
+                console.error(err);
+                reportMessage.textContent = "تعذر حذف التقرير.";
+                reportMessage.classList.add('error');
+            }
+        });
+    }
+
+    // تحميل البيانات عند فتح الصفحة
+    loadBlogs();
+    loadReports();
+})();
 </script>
+
 </body>
 </html>

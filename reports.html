@@ -49,104 +49,89 @@
       <div class="copyright"><p>جميع الحقوق محفوظة &copy; 2025 منتدى مستقبل حضرموت</p></div>
     </div>
   </footer>
-  <script src="js/script.js"></script>
-  <script>
-  (function () {
-    const wrap = document.getElementById('reports-list');
-    if (!wrap) return;
+  
+<script src="js/script.js"></script>
+<script>
+(function () {
+  const wrap = document.getElementById('reports-list');
+  if (!wrap) return;
+  const API_URL = "https://script.google.com/macros/s/AKfycbzrrCg2VRAuXXCaFEoJXDa3CxfQBpWEa9IHjG4cakHGgmEgE2rsttKe-ryufD2YkdW/exec";
 
-    function getLocalReports() {
-      try {
-        const arr = JSON.parse(localStorage.getItem('reports') || '[]');
-        return Array.isArray(arr) ? arr : [];
-      } catch (e) {
-        return [];
-      }
+  function renderFromApi(items) {
+    if (!items || !items.length) {
+      wrap.innerHTML = '<p>لا توجد تقارير حالياً.</p>';
+      return;
     }
+    let html = "";
+    items.forEach(function (it) {
+      const title = it.title || "";
+      const desc = it.description || "";
+      const url = it.main || "";
+      const pw = it.password || "";
+      const btnLabel = pw ? 'تنزيل (محمي)' : 'تنزيل';
+      html += '<article class="report-card">'
+           + '<h2>' + title + '</h2>'
+           + '<p>' + desc + '</p>'
+           + '<button onclick="window.promptDownload(\'' + url + '\', \'" + pw + "\')">' + btnLabel + '</button>'
+           + '</article>';
+    });
+    wrap.innerHTML = html;
+  }
 
-    function buildCards(localItems, jsonItems) {
-      const parts = [];
-
-      // تقارير تم إنشاؤها من لوحة التحكم (مرفوعة إلى Cloudinary)
-      if (Array.isArray(localItems) && localItems.length) {
-        localItems.forEach(function (r, idx) {
-          const title = r.title || ('تقرير #' + (idx + 1));
-          const url = (r.url || '').toString();
-          const password = (r.password || '').toString();
-          if (!url) {
-            return;
-          }
-          const isProtected = password.trim() !== '';
-
-          parts.push(`
-      <div class="card">
-        <h3>${title}</h3>
-        <p>هذا التقرير متاح للتنزيل عبر الرابط التالي.</p>
-        <button class="btn report-download-btn" data-report-url="${url}" data-report-password="${password}">
-          ${isProtected ? 'تنزيل (محمي)' : 'تنزيل'}
-        </button>
-      </div>`);
-        });
-      }
-
-      // تقارير معرفة مسبقاً في content/reports/reports.json
-      if (Array.isArray(jsonItems) && jsonItems.length) {
-        jsonItems.forEach(function (it) {
-          const isProtected = !!it.protected;
-          const file = (it.file || '').toString();
-          const password = (it.password || '').toString();
-
-          parts.push(`
-      <div class="card">
-        <h3>${it.title || 'تقرير'}</h3>
-        <p>${it.description || ''}</p>
-        <button class="btn report-download-btn" data-report-url="${file}" data-report-password="${password}">
-          ${isProtected ? 'تنزيل (محمي)' : 'تنزيل'}
-        </button>
-      </div>`);
-        });
-      }
-
-      if (!parts.length) {
-        wrap.innerHTML = '<p>لا توجد تقارير حالياً.</p>';
-        return;
-      }
-
-      wrap.innerHTML = parts.join('');
-
-      // Attach click handlers after rendering
-      const buttons = wrap.querySelectorAll('.report-download-btn');
-      buttons.forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          const url = this.getAttribute('data-report-url') || '';
-          const pw = this.getAttribute('data-report-password') || '';
-          promptDownload(url, pw);
-        });
-      });
-    }
-
-    const localReports = getLocalReports();
-
+  function renderFallback() {
     fetch('content/reports/reports.json')
       .then(function (r) { return r.json(); })
       .then(function (items) {
-        buildCards(localReports, items);
+        if (!Array.isArray(items) || !items.length) {
+          wrap.innerHTML = '<p>لا توجد تقارير حالياً.</p>';
+          return;
+        }
+        let html = "";
+        items.forEach(function (it) {
+          const title = it.title || "";
+          const desc = it.description || "";
+          const url = it.file || "";
+          const pw = it.password || "";
+          const btnLabel = pw ? 'تنزيل (محمي)' : 'تنزيل';
+          html += '<article class="report-card">'
+               + '<h2>' + title + '</h2>'
+               + '<p>' + desc + '</p>'
+               + '<button onclick="window.promptDownload(\'' + url + '\', \'" + pw + "\')">' + btnLabel + '</button>'
+               + '</article>';
+        });
+        wrap.innerHTML = html;
       })
       .catch(function () {
-        buildCards(localReports, []);
+        wrap.innerHTML = '<p>تعذر تحميل التقارير حالياً.</p>';
       });
+  }
 
-    window.promptDownload = function (file, pw) {
-      if (!file) return;
-      if (!pw) { window.location = file; return; }
-      const input = window.prompt('أدخل كلمة المرور:');
-      if (input === pw) {
-        window.location = file;
+  // keep global promptDownload
+  window.promptDownload = function (file, pw) {
+    if (!file) return;
+    if (!pw) { window.location = file; return; }
+    const input = window.prompt('أدخل كلمة المرور:');
+    if (input === pw) {
+      window.location = file;
+    } else {
+      alert('كلمة المرور غير صحيحة');
+    }
+  };
+
+  fetch(API_URL + '?type=report')
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (data && Array.isArray(data.items) && data.items.length) {
+        renderFromApi(data.items);
       } else {
-        alert('كلمة المرور غير صحيحة');
+        renderFallback();
       }
-    };
-  })();
-  </script>
+    })
+    .catch(function () {
+      renderFallback();
+    });
+})();
+</script>
+
 </body>
 </html>
