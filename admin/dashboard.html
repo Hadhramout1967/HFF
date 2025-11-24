@@ -297,7 +297,7 @@
             });
         }
 
-        // عناصر المقالات
+        // ========= إدارة المقالات =========
         const blogForm = document.getElementById('blog-form');
         const blogMessage = document.getElementById('blog-message');
         const blogDeleteSelect = document.getElementById('blog-delete-select');
@@ -350,7 +350,6 @@
 
                 const title = (document.getElementById('blog-title').value || "").trim();
                 const content = (document.getElementById('blog-content').value || "").trim();
-                // const imageInput = document.getElementById('blog-image');
 
                 if (!title || !content) {
                     blogMessage.textContent = "الرجاء تعبئة عنوان ومحتوى المقال.";
@@ -402,12 +401,40 @@
 
         refreshBlogDeleteOptions();
 
-        // عناصر التقارير
+        // ========= إدارة التقارير + رفع إلى Cloudinary =========
         const reportForm = document.getElementById('report-form');
         const reportMessage = document.getElementById('report-message');
         const reportList = document.getElementById('report-list');
         const reportDeleteSelect = document.getElementById('report-delete-select');
         const reportDeleteBtn = document.getElementById('report-delete-btn');
+
+        const CLOUD_NAME = "dq7jzicaj";
+        const UPLOAD_PRESET = "hff_unsigned";
+
+        async function uploadToCloudinary(file) {
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("upload_preset", UPLOAD_PRESET);
+
+            const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, {
+                method: "POST",
+                body: formData
+            });
+
+            if (!res.ok) {
+                throw new Error("فشل رفع الملف إلى Cloudinary");
+            }
+
+            const data = await res.json();
+            if (!data.secure_url) {
+                throw new Error("لم يتم استرجاع رابط من Cloudinary");
+            }
+
+            return {
+                url: data.secure_url,
+                publicId: data.public_id || ""
+            };
+        }
 
         function getReports() {
             try {
@@ -429,7 +456,8 @@
 
             reports.forEach(function (r) {
                 const li = document.createElement('li');
-                li.textContent = r.title + " — ملف: " + r.fileName + " — كلمة المرور: " + r.password;
+                const url = r.url || "";
+                li.textContent = r.title + " — رابط: " + (url ? url : "غير متوفر") + " — كلمة المرور: " + (r.password || "-");
                 reportList.appendChild(li);
             });
 
@@ -457,7 +485,7 @@
 
         if (reportForm && reportMessage && reportList) {
             renderReports();
-            reportForm.addEventListener('submit', function (e) {
+            reportForm.addEventListener('submit', async function (e) {
                 e.preventDefault();
                 reportMessage.textContent = "";
                 reportMessage.classList.remove('success', 'error');
@@ -472,25 +500,39 @@
                     return;
                 }
 
-                const fileName = fileInput.files[0].name;
+                const file = fileInput.files[0];
 
-                const reports = getReports();
-                reports.push({
-                    title: title,
-                    fileName: fileName,
-                    password: password,
-                    date: new Date().toISOString()
-                });
-                saveReports(reports);
+                try {
+                    reportMessage.textContent = "جارٍ رفع الملف...";
+                    reportMessage.classList.remove('error');
+                    reportMessage.classList.add('success');
 
-                reportMessage.textContent = "تم حفظ التقرير مع كلمة المرور (محفوظ في هذا المتصفح فقط).";
-                reportMessage.classList.add('success');
-                reportForm.reset();
-                renderReports();
-                setTimeout(function () {
-                    reportMessage.textContent = "";
+                    const uploaded = await uploadToCloudinary(file);
+
+                    const reports = getReports();
+                    reports.push({
+                        title: title,
+                        url: uploaded.url,
+                        publicId: uploaded.publicId,
+                        password: password,
+                        date: new Date().toISOString()
+                    });
+                    saveReports(reports);
+
+                    reportMessage.textContent = "تم رفع التقرير وحفظه مع كلمة المرور.";
+                    reportMessage.classList.add('success');
+                    reportForm.reset();
+                    renderReports();
+                    setTimeout(function () {
+                        reportMessage.textContent = "";
+                        reportMessage.classList.remove('success');
+                    }, 2500);
+                } catch (err) {
+                    console.error(err);
+                    reportMessage.textContent = "حدث خطأ أثناء رفع الملف. يرجى المحاولة مرة أخرى.";
                     reportMessage.classList.remove('success');
-                }, 2500);
+                    reportMessage.classList.add('error');
+                }
             });
         }
 

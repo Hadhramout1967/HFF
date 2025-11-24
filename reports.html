@@ -67,25 +67,24 @@
     function buildCards(localItems, jsonItems) {
       const parts = [];
 
-      // تقارير تم إنشاؤها من لوحة التحكم (يجب رفع الملفات إلى مجلد files/reports)
+      // تقارير تم إنشاؤها من لوحة التحكم (مرفوعة إلى Cloudinary)
       if (Array.isArray(localItems) && localItems.length) {
         localItems.forEach(function (r, idx) {
           const title = r.title || ('تقرير #' + (idx + 1));
-          const fileName = (r.fileName || '').toString();
+          const url = (r.url || '').toString();
           const password = (r.password || '').toString();
-          // نفترض أن الملف موجود في files/reports بنفس الاسم
-          const filePath = 'files/reports/' + encodeURIComponent(fileName);
+          if (!url) {
+            return;
+          }
           const isProtected = password.trim() !== '';
-
-          const btn = isProtected
-            ? `<button class="btn" onclick="promptDownload('${filePath}','${password}')">تنزيل (محمي)</button>`
-            : `<a class="btn" href="${filePath}" download>تنزيل</a>`;
 
           parts.push(`
       <div class="card">
         <h3>${title}</h3>
-        <p>اسم الملف: ${fileName || 'ملف'}</p>
-        ${btn}
+        <p>رابط الملف السحابي متاح للتنزيل.</p>
+        <button class="btn report-download-btn" data-report-url="${url}" data-report-password="${password}">
+          ${isProtected ? 'تنزيل (محمي)' : 'تنزيل'}
+        </button>
       </div>`);
         });
       }
@@ -94,16 +93,16 @@
       if (Array.isArray(jsonItems) && jsonItems.length) {
         jsonItems.forEach(function (it) {
           const isProtected = !!it.protected;
-          const file = it.file || '';
+          const file = (it.file || '').toString();
           const password = (it.password || '').toString();
-          const btn = isProtected
-            ? `<button class="btn" onclick="promptDownload('${file}','${password}')">تنزيل (محمي)</button>`
-            : `<a class="btn" href="${file}" download>تنزيل</a>`;
+
           parts.push(`
       <div class="card">
         <h3>${it.title || 'تقرير'}</h3>
         <p>${it.description || ''}</p>
-        ${btn}
+        <button class="btn report-download-btn" data-report-url="${file}" data-report-password="${password}">
+          ${isProtected ? 'تنزيل (محمي)' : 'تنزيل'}
+        </button>
       </div>`);
         });
       }
@@ -114,6 +113,16 @@
       }
 
       wrap.innerHTML = parts.join('');
+
+      // Attach click handlers after rendering
+      const buttons = wrap.querySelectorAll('.report-download-btn');
+      buttons.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          const url = this.getAttribute('data-report-url') || '';
+          const pw = this.getAttribute('data-report-password') || '';
+          promptDownload(url, pw);
+        });
+      });
     }
 
     const localReports = getLocalReports();
@@ -128,6 +137,7 @@
       });
 
     window.promptDownload = function (file, pw) {
+      if (!file) return;
       if (!pw) { window.location = file; return; }
       const input = window.prompt('أدخل كلمة المرور:');
       if (input === pw) {
@@ -138,6 +148,8 @@
     };
   })();
   </script>
+</body>
+</html>
 </body>
 </html>
 </body>
