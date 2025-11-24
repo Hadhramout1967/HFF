@@ -186,6 +186,19 @@
         .admin-report-list li {
             margin-bottom: 4px;
         }
+
+        .admin-delete-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .admin-button-danger {
+            background: linear-gradient(90deg, #c53030, #e53e3e);
+        }
+        .admin-delete-row select.admin-input {
+            max-width: 100%;
+        }
 </style>
 </head>
 <body>
@@ -234,7 +247,14 @@
                     <button type="submit" class="admin-button">حفظ المقال</button>
                 </form>
                 <div id="blog-message" class="admin-message"></div>
+
+                <h3 class="admin-list-title">حذف مقال</h3>
+                <div class="admin-delete-row">
+                    <select id="blog-delete-select" class="admin-input"></select>
+                    <button type="button" id="blog-delete-btn" class="admin-button admin-button-danger">حذف</button>
+                </div>
             </div>
+
             <div class="admin-card-box">
                 <h2><i class="fas fa-file-alt"></i> رفع تقرير</h2>
                 <p>قم برفع ملف التقرير وتحديد كلمة مرور خاصة به للاستخدام مستقبلاً. (الحفظ محلي على هذا المتصفح.)</p>
@@ -256,12 +276,18 @@
                 <div id="report-message" class="admin-message"></div>
                 <h3 class="admin-list-title">التقارير المحفوظة (على هذا المتصفح فقط)</h3>
                 <ul id="report-list" class="admin-report-list"></ul>
+
+                <h3 class="admin-list-title">حذف تقرير</h3>
+                <div class="admin-delete-row">
+                    <select id="report-delete-select" class="admin-input"></select>
+                    <button type="button" id="report-delete-btn" class="admin-button admin-button-danger">حذف</button>
+                </div>
             </div>
         </div>
     </div>
 </main>
 <script>
-    // زر تسجيل الخروج
+    // زر تسجيل الخروج + إدارة النماذج
     (function () {
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
@@ -271,9 +297,50 @@
             });
         }
 
-        // نموذج المقال
+        // عناصر المقالات
         const blogForm = document.getElementById('blog-form');
         const blogMessage = document.getElementById('blog-message');
+        const blogDeleteSelect = document.getElementById('blog-delete-select');
+        const blogDeleteBtn = document.getElementById('blog-delete-btn');
+
+        function getBlogs() {
+            try {
+                const arr = JSON.parse(localStorage.getItem('blogs') || '[]');
+                return Array.isArray(arr) ? arr : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveBlogs(arr) {
+            localStorage.setItem('blogs', JSON.stringify(arr || []));
+        }
+
+        function refreshBlogDeleteOptions() {
+            if (!blogDeleteSelect || !blogDeleteBtn) return;
+            const blogs = getBlogs();
+            blogDeleteSelect.innerHTML = "";
+
+            if (!blogs.length) {
+                const opt = document.createElement('option');
+                opt.value = "";
+                opt.textContent = "لا توجد مقالات محفوظة";
+                blogDeleteSelect.appendChild(opt);
+                blogDeleteSelect.disabled = true;
+                blogDeleteBtn.disabled = true;
+                return;
+            }
+
+            blogDeleteSelect.disabled = false;
+            blogDeleteBtn.disabled = false;
+
+            blogs.forEach(function (b, index) {
+                const opt = document.createElement('option');
+                opt.value = String(index);
+                opt.textContent = b.title || ("مقال #" + (index + 1));
+                blogDeleteSelect.appendChild(opt);
+            });
+        }
 
         if (blogForm && blogMessage) {
             blogForm.addEventListener('submit', function (e) {
@@ -283,6 +350,7 @@
 
                 const title = (document.getElementById('blog-title').value || "").trim();
                 const content = (document.getElementById('blog-content').value || "").trim();
+                // const imageInput = document.getElementById('blog-image');
 
                 if (!title || !content) {
                     blogMessage.textContent = "الرجاء تعبئة عنوان ومحتوى المقال.";
@@ -290,17 +358,18 @@
                     return;
                 }
 
-                const blogs = JSON.parse(localStorage.getItem('blogs') || '[]');
+                const blogs = getBlogs();
                 blogs.push({
                     title: title,
                     content: content,
                     date: new Date().toISOString()
                 });
-                localStorage.setItem('blogs', JSON.stringify(blogs));
+                saveBlogs(blogs);
 
                 blogMessage.textContent = "تم حفظ المقال (محفوظ في هذا المتصفح فقط).";
                 blogMessage.classList.add('success');
                 blogForm.reset();
+                refreshBlogDeleteOptions();
                 setTimeout(function () {
                     blogMessage.textContent = "";
                     blogMessage.classList.remove('success');
@@ -308,20 +377,82 @@
             });
         }
 
-        // نموذج التقارير
+        if (blogDeleteBtn && blogDeleteSelect && blogMessage) {
+            blogDeleteBtn.addEventListener('click', function () {
+                const val = blogDeleteSelect.value;
+                if (val === "") return;
+                const idx = parseInt(val, 10);
+                const blogs = getBlogs();
+                if (isNaN(idx) || idx < 0 || idx >= blogs.length) return;
+
+                if (!window.confirm("هل أنت متأكد من حذف هذا المقال؟")) return;
+
+                blogs.splice(idx, 1);
+                saveBlogs(blogs);
+                refreshBlogDeleteOptions();
+                blogMessage.textContent = "تم حذف المقال.";
+                blogMessage.classList.remove('error');
+                blogMessage.classList.add('success');
+                setTimeout(function () {
+                    blogMessage.textContent = "";
+                    blogMessage.classList.remove('success');
+                }, 2000);
+            });
+        }
+
+        refreshBlogDeleteOptions();
+
+        // عناصر التقارير
         const reportForm = document.getElementById('report-form');
         const reportMessage = document.getElementById('report-message');
         const reportList = document.getElementById('report-list');
+        const reportDeleteSelect = document.getElementById('report-delete-select');
+        const reportDeleteBtn = document.getElementById('report-delete-btn');
+
+        function getReports() {
+            try {
+                const arr = JSON.parse(localStorage.getItem('reports') || '[]');
+                return Array.isArray(arr) ? arr : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveReports(arr) {
+            localStorage.setItem('reports', JSON.stringify(arr || []));
+        }
 
         function renderReports() {
             if (!reportList) return;
+            const reports = getReports();
             reportList.innerHTML = "";
-            const reports = JSON.parse(localStorage.getItem('reports') || '[]');
+
             reports.forEach(function (r) {
                 const li = document.createElement('li');
                 li.textContent = r.title + " — ملف: " + r.fileName + " — كلمة المرور: " + r.password;
                 reportList.appendChild(li);
             });
+
+            if (reportDeleteSelect && reportDeleteBtn) {
+                reportDeleteSelect.innerHTML = "";
+                if (!reports.length) {
+                    const opt = document.createElement('option');
+                    opt.value = "";
+                    opt.textContent = "لا توجد تقارير محفوظة";
+                    reportDeleteSelect.appendChild(opt);
+                    reportDeleteSelect.disabled = true;
+                    reportDeleteBtn.disabled = true;
+                } else {
+                    reportDeleteSelect.disabled = false;
+                    reportDeleteBtn.disabled = false;
+                    reports.forEach(function (r, index) {
+                        const opt = document.createElement('option');
+                        opt.value = String(index);
+                        opt.textContent = r.title || ("تقرير #" + (index + 1));
+                        reportDeleteSelect.appendChild(opt);
+                    });
+                }
+            }
         }
 
         if (reportForm && reportMessage && reportList) {
@@ -343,14 +474,14 @@
 
                 const fileName = fileInput.files[0].name;
 
-                const reports = JSON.parse(localStorage.getItem('reports') || '[]');
+                const reports = getReports();
                 reports.push({
                     title: title,
                     fileName: fileName,
                     password: password,
                     date: new Date().toISOString()
                 });
-                localStorage.setItem('reports', JSON.stringify(reports));
+                saveReports(reports);
 
                 reportMessage.textContent = "تم حفظ التقرير مع كلمة المرور (محفوظ في هذا المتصفح فقط).";
                 reportMessage.classList.add('success');
@@ -360,6 +491,29 @@
                     reportMessage.textContent = "";
                     reportMessage.classList.remove('success');
                 }, 2500);
+            });
+        }
+
+        if (reportDeleteBtn && reportDeleteSelect && reportMessage) {
+            reportDeleteBtn.addEventListener('click', function () {
+                const val = reportDeleteSelect.value;
+                if (val === "") return;
+                const idx = parseInt(val, 10);
+                const reports = getReports();
+                if (isNaN(idx) || idx < 0 || idx >= reports.length) return;
+
+                if (!window.confirm("هل أنت متأكد من حذف هذا التقرير؟")) return;
+
+                reports.splice(idx, 1);
+                saveReports(reports);
+                renderReports();
+                reportMessage.textContent = "تم حذف التقرير.";
+                reportMessage.classList.remove('error');
+                reportMessage.classList.add('success');
+                setTimeout(function () {
+                    reportMessage.textContent = "";
+                    reportMessage.classList.remove('success');
+                }, 2000);
             });
         }
     })();

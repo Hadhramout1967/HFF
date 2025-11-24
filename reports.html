@@ -51,20 +51,78 @@
   </footer>
   <script src="js/script.js"></script>
   <script>
-  fetch('content/reports/reports.json').then(r=>r.json()).then(items=>{
+  (function () {
     const wrap = document.getElementById('reports-list');
-    if(!Array.isArray(items) || items.length===0){ wrap.innerHTML = '<p>لا توجد تقارير حالياً.</p>'; return; }
-    wrap.innerHTML = items.map(it => {
-      const btn = it.protected ? `<button class="btn" onclick="promptDownload('${it.file}','${it.password||''}')">تنزيل (محمي)</button>`
-                               : `<a class="btn" href="${it.file}" download>تنزيل</a>`;
-      return `<div class="card"><h3>${it.title||'تقرير'}</h3><p>${it.description||''}</p>${btn}</div>`;
-    }).join('');
-  }).catch(()=>{ document.getElementById('reports-list').innerHTML='<p>لا توجد تقارير حالياً.</p>'; });
-  function promptDownload(file, pw){
-     if(!pw){window.location = file; return;}
-     const input = window.prompt('أدخل كلمة المرور:');
-     if(input === pw){ window.location = file; } else { alert('كلمة المرور غير صحيحة'); }
-  }
+    if (!wrap) return;
+
+    function getLocalReports() {
+      try {
+        const arr = JSON.parse(localStorage.getItem('reports') || '[]');
+        return Array.isArray(arr) ? arr : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function buildCards(localItems, jsonItems) {
+      const parts = [];
+
+      if (Array.isArray(localItems) && localItems.length) {
+        localItems.forEach(function (r, idx) {
+          parts.push(`
+      <div class="card">
+        <h3>${r.title || ('تقرير #' + (idx + 1))}</h3>
+        <p>اسم الملف: ${r.fileName || 'ملف محلي'}</p>
+        <p>كلمة المرور: ${r.password || '-'}</p>
+        <p style="font-size:0.8rem;color:#718096;">هذا التقرير محفوظ محلياً في هذا المتصفح فقط ولا يمكن تنزيله مباشرة من الخادم.</p>
+      </div>`);
+        });
+      }
+
+      if (Array.isArray(jsonItems) && jsonItems.length) {
+        jsonItems.forEach(function (it) {
+          const isProtected = !!it.protected;
+          const btn = isProtected
+            ? `<button class="btn" onclick="promptDownload('${it.file}','${it.password || ''}')">تنزيل (محمي)</button>`
+            : `<a class="btn" href="${it.file}" download>تنزيل</a>`;
+          parts.push(`
+      <div class="card">
+        <h3>${it.title || 'تقرير'}</h3>
+        <p>${it.description || ''}</p>
+        ${btn}
+      </div>`);
+        });
+      }
+
+      if (!parts.length) {
+        wrap.innerHTML = '<p>لا توجد تقارير حالياً.</p>';
+        return;
+      }
+
+      wrap.innerHTML = parts.join('');
+    }
+
+    const localReports = getLocalReports();
+
+    fetch('content/reports/reports.json')
+      .then(function (r) { return r.json(); })
+      .then(function (items) {
+        buildCards(localReports, items);
+      })
+      .catch(function () {
+        buildCards(localReports, []);
+      });
+
+    window.promptDownload = function (file, pw) {
+      if (!pw) { window.location = file; return; }
+      const input = window.prompt('أدخل كلمة المرور:');
+      if (input === pw) {
+        window.location = file;
+      } else {
+        alert('كلمة المرور غير صحيحة');
+      }
+    };
+  })();
   </script>
 </body>
 </html>

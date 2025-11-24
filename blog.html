@@ -51,17 +51,70 @@
   </footer>
   <script src="js/script.js"></script>
   <script>
-  fetch('content/blog/posts.json').then(r=>r.json()).then(items=>{
+  (function () {
     const wrap = document.getElementById('blog-list');
-    if(!Array.isArray(items) || items.length===0){ wrap.innerHTML = '<p>لا توجد مقالات حالياً.</p>'; return; }
-    wrap.innerHTML = items.map(p => `
+    if (!wrap) return;
+
+    function getLocalBlogs() {
+      try {
+        const arr = JSON.parse(localStorage.getItem('blogs') || '[]');
+        return Array.isArray(arr) ? arr : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function buildCards(localItems, jsonItems) {
+      const all = [];
+
+      if (Array.isArray(localItems)) {
+        localItems.forEach(function (b, idx) {
+          const content = (b.content || '').toString();
+          const short = content.length > 160 ? content.slice(0, 160) + '…' : content;
+          all.push({
+            title: b.title || ('مقال #' + (idx + 1)),
+            excerpt: short,
+            url: '#'
+          });
+        });
+      }
+
+      if (Array.isArray(jsonItems)) {
+        jsonItems.forEach(function (p) {
+          all.push({
+            title: p.title || 'مقال',
+            excerpt: p.excerpt || '',
+            url: p.url || '#'
+          });
+        });
+      }
+
+      if (!all.length) {
+        wrap.innerHTML = '<p>لا توجد مقالات حالياً.</p>';
+        return;
+      }
+
+      wrap.innerHTML = all.map(function (p) {
+        return `
       <article class="card">
         <h3 style="margin-bottom:8px;">${p.title}</h3>
-        <p style="margin-bottom:10px;">${p.excerpt||''}</p>
+        <p style="margin-bottom:10px;">${p.excerpt}</p>
         <a class="btn" href="${p.url}" target="_blank" rel="noopener">اقرأ المزيد</a>
-      </article>
-    `).join('');
-  }).catch(()=>{ document.getElementById('blog-list').innerHTML='<p>لا توجد مقالات حالياً.</p>'; });
+      </article>`;
+      }).join('');
+    }
+
+    const localBlogs = getLocalBlogs();
+
+    fetch('content/blog/posts.json')
+      .then(function (r) { return r.json(); })
+      .then(function (items) {
+        buildCards(localBlogs, items);
+      })
+      .catch(function () {
+        buildCards(localBlogs, []);
+      });
+  })();
   </script>
 </body>
 </html>
