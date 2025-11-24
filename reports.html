@@ -21,7 +21,7 @@
             <p>Hadhramout Future Forum</p>
           </div>
         </a>
-        <nav>
+        <div class="menu-toggle" id="menu-toggle"><span></span><span></span><span></span></div><nav>
           <ul>
             <li><a href="vision.html">الرؤية</a></li>
             <li><a href="goals.html">الأهداف</a></li>
@@ -30,7 +30,7 @@
             <li><a href="contact.html">تواصل معنا</a></li>
             <li><a href="blog.html">المقالات</a></li>
             <li><a href="reports.html">التقارير</a></li>
-          </ul>
+          <li><a href="admin/dashboard.html" title="لوحة التحكم"><i class="fas fa-gear"></i></a></li></ul>
         </nav>
       </div>
     </div>
@@ -81,7 +81,7 @@
           parts.push(`
       <div class="card">
         <h3>${title}</h3>
-        <p>رابط الملف السحابي متاح للتنزيل.</p>
+        <p>هذا التقرير متاح للتنزيل عبر الرابط التالي.</p>
         <button class="btn report-download-btn" data-report-url="${url}" data-report-password="${password}">
           ${isProtected ? 'تنزيل (محمي)' : 'تنزيل'}
         </button>
@@ -148,9 +148,5 @@
     };
   })();
   </script>
-</body>
-</html>
-</body>
-</html>
 </body>
 </html>

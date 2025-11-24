@@ -257,19 +257,23 @@
 
             <div class="admin-card-box">
                 <h2><i class="fas fa-file-alt"></i> رفع تقرير</h2>
-                <p>قم برفع ملف التقرير وتحديد كلمة مرور خاصة به للاستخدام مستقبلاً. (الحفظ محلي على هذا المتصفح.)</p>
+                <p>أدخل رابط ملف التقرير (مثل Google Drive أو أي رابط مباشر) وحدد كلمة مرور اختيارية له.</p>
                 <form id="report-form">
                     <div class="admin-form-group">
                         <label for="report-title">عنوان التقرير</label>
                         <input type="text" id="report-title" class="admin-input" required>
                     </div>
                     <div class="admin-form-group">
-                        <label for="report-file">ملف التقرير (PDF)</label>
-                        <input type="file" id="report-file" class="admin-input" accept="application/pdf" required>
+                        <label for="report-link">رابط التقرير (URL)</label>
+                        <input type="url" id="report-link" class="admin-input" placeholder="https://example.com/report.pdf" required>
                     </div>
                     <div class="admin-form-group">
-                        <label for="report-password">كلمة مرور التقرير</label>
-                        <input type="password" id="report-password" class="admin-input" required>
+                        <label for="report-desc">وصف مختصر للتقرير</label>
+                        <textarea id="report-desc" class="admin-textarea" placeholder="وصف قصير عن محتوى التقرير"></textarea>
+                    </div>
+                    <div class="admin-form-group">
+                        <label for="report-password">كلمة مرور التقرير (اختياري)</label>
+                        <input type="password" id="report-password" class="admin-input">
                     </div>
                     <button type="submit" class="admin-button">حفظ التقرير</button>
                 </form>
@@ -401,42 +405,12 @@
 
         refreshBlogDeleteOptions();
 
-        // ========= إدارة التقارير + رفع إلى Cloudinary =========
+        // ========= إدارة التقارير (رابط فقط) =========
         const reportForm = document.getElementById('report-form');
         const reportMessage = document.getElementById('report-message');
         const reportList = document.getElementById('report-list');
         const reportDeleteSelect = document.getElementById('report-delete-select');
         const reportDeleteBtn = document.getElementById('report-delete-btn');
-
-        const CLOUD_NAME = "dq7jzicaj";
-        const UPLOAD_PRESET = "hff_unsigned";
-
-        async function uploadToCloudinary(file) {
-            const formData = new FormData();
-            formData.append("file", file);
-            formData.append("upload_preset", UPLOAD_PRESET);
-            formData.append("filename_override", file.name);
-            formData.append("resource_type", "raw");
-
-            const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/raw/upload`, {
-                method: "POST",
-                body: formData
-            });
-
-            if (!res.ok) {
-                throw new Error("فشل رفع الملف إلى Cloudinary");
-            }
-
-            const data = await res.json();
-            if (!data.secure_url) {
-                throw new Error("لم يتم استرجاع رابط من Cloudinary");
-            }
-
-            return {
-                url: data.secure_url,
-                publicId: data.public_id || ""
-            };
-        }
 
         function getReports() {
             try {
@@ -487,54 +461,40 @@
 
         if (reportForm && reportMessage && reportList) {
             renderReports();
-            reportForm.addEventListener('submit', async function (e) {
+            reportForm.addEventListener('submit', function (e) {
                 e.preventDefault();
                 reportMessage.textContent = "";
                 reportMessage.classList.remove('success', 'error');
 
                 const title = (document.getElementById('report-title').value || "").trim();
+                const link = (document.getElementById('report-link').value || "").trim();
+                const desc = (document.getElementById('report-desc').value || "").trim();
                 const password = (document.getElementById('report-password').value || "").trim();
-                const fileInput = document.getElementById('report-file');
 
-                if (!title || !password || !fileInput || !fileInput.files.length) {
-                    reportMessage.textContent = "الرجاء تعبئة جميع الحقول واختيار ملف.";
+                if (!title || !link) {
+                    reportMessage.textContent = "الرجاء إدخال عنوان التقرير والرابط.";
                     reportMessage.classList.add('error');
                     return;
                 }
 
-                const file = fileInput.files[0];
+                const reports = getReports();
+                reports.push({
+                    title: title,
+                    url: link,
+                    description: desc,
+                    password: password,
+                    date: new Date().toISOString()
+                });
+                saveReports(reports);
 
-                try {
-                    reportMessage.textContent = "جارٍ رفع الملف...";
-                    reportMessage.classList.remove('error');
-                    reportMessage.classList.add('success');
-
-                    const uploaded = await uploadToCloudinary(file);
-
-                    const reports = getReports();
-                    reports.push({
-                        title: title,
-                        url: uploaded.url,
-                        publicId: uploaded.publicId,
-                        password: password,
-                        date: new Date().toISOString()
-                    });
-                    saveReports(reports);
-
-                    reportMessage.textContent = "تم رفع التقرير وحفظه مع كلمة المرور.";
-                    reportMessage.classList.add('success');
-                    reportForm.reset();
-                    renderReports();
-                    setTimeout(function () {
-                        reportMessage.textContent = "";
-                        reportMessage.classList.remove('success');
-                    }, 2500);
-                } catch (err) {
-                    console.error(err);
-                    reportMessage.textContent = "حدث خطأ أثناء رفع الملف. يرجى المحاولة مرة أخرى.";
+                reportMessage.textContent = "تم حفظ رابط التقرير.";
+                reportMessage.classList.add('success');
+                reportForm.reset();
+                renderReports();
+                setTimeout(function () {
+                    reportMessage.textContent = "";
                     reportMessage.classList.remove('success');
-                    reportMessage.classList.add('error');
-                }
+                }, 2500);
             });
         }
 
