@@ -51,67 +51,71 @@
   </footer>
   
 <script src="js/script.js"></script>
+<script src="js/script.js"></script>
 <script>
 (function () {
-  const wrap = document.getElementById('blog-list');
+  const API_URL = "https://script.google.com/macros/s/AKfycbzrrCg2VRAXuXXCaFEoJXDa3CxfQBpWEa9IHjG4cakHGgmEgE2rstkKe-ryufD2YkdW/exec";
+  const wrap = document.getElementById("blog-list"); // تأكد الـ div عندك id="blog-list"
   if (!wrap) return;
-  const API_URL = "https://script.google.com/macros/s/AKfycbzrrCg2VRAuXXCaFEoJXDa3CxfQBpWEa9IHjG4cakHGgmEgE2rsttKe-ryufD2YkdW/exec";
 
   function renderFromApi(items) {
     if (!items || !items.length) {
-      wrap.innerHTML = '<p>لا توجد مقالات حالياً.</p>';
+      wrap.innerHTML = "<p>لا توجد مقالات حالياً.</p>";
       return;
     }
     let html = "";
-    items.forEach(function (it) {
+    items.forEach(it => {
       const title = it.title || "";
       const body = (it.main || "").replace(/\n/g, "<br>");
-      html += '<article class="blog-card">'
-           + '<h2>' + title + '</h2>'
-           + '<p>' + body + '</p>'
-           + '</article>';
+      html +=
+        '<article class="blog-card">' +
+        "<h2>" + title + "</h2>" +
+        "<p>" + body + "</p>" +
+        "</article>";
     });
     wrap.innerHTML = html;
   }
 
   function renderFallback() {
-    fetch('content/blog/posts.json')
-      .then(function (r) { return r.json(); })
-      .then(function (items) {
+    fetch("content/blog/posts.json")
+      .then(r => r.json())
+      .then(items => {
         if (!Array.isArray(items) || !items.length) {
-          wrap.innerHTML = '<p>لا توجد مقالات حالياً.</p>';
+          wrap.innerHTML = "<p>لا توجد مقالات حالياً.</p>";
           return;
         }
         let html = "";
-        items.forEach(function (it) {
+        items.forEach(it => {
           const title = it.title || "";
           const body = (it.content || "").replace(/\n/g, "<br>");
-          html += '<article class="blog-card">'
-               + '<h2>' + title + '</h2>'
-               + '<p>' + body + '</p>'
-               + '</article>';
+          html +=
+            '<article class="blog-card">' +
+            "<h2>" + title + "</h2>" +
+            "<p>" + body + "</p>" +
+            "</article>";
         });
         wrap.innerHTML = html;
       })
-      .catch(function () {
-        wrap.innerHTML = '<p>تعذر تحميل المقالات حالياً.</p>';
+      .catch(() => {
+        wrap.innerHTML = "<p>تعذر تحميل المقالات حالياً.</p>";
       });
   }
 
-  fetch(API_URL + '?type=blog')
-    .then(function (r) { return r.json(); })
-    .then(function (data) {
+  fetch(API_URL + "?type=blog")
+    .then(r => r.json())
+    .then(data => {
       if (data && Array.isArray(data.items) && data.items.length) {
         renderFromApi(data.items);
       } else {
         renderFallback();
       }
     })
-    .catch(function () {
+    .catch(() => {
       renderFallback();
     });
 })();
 </script>
+
 
 </body>
 </html>
