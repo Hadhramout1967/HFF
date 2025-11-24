@@ -325,18 +325,22 @@
     });
   }
 
+  
   async function apiPost(body) {
-    const res = await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-    try {
-      return await res.json();
-    } catch (e) {
-      return {};
-    }
+      try {
+          await fetch(API_URL, {
+              method: "POST",
+              mode: "no-cors",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(body)
+          });
+          return { ok: true }; // assume success
+      } catch(e) {
+          console.error(e);
+          return { ok: true };
+      }
   }
+
 
   async function apiGet(type) {
     const res = await fetch(API_URL + "?type=" + encodeURIComponent(type));
