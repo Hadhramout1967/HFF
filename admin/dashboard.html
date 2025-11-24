@@ -117,7 +117,76 @@
                 align-items: flex-start;
             }
         }
-    </style>
+    
+        .admin-page-title {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+        }
+        .admin-page-subtitle {
+            font-size: 0.95rem;
+            color: #4a5568;
+            margin-bottom: 20px;
+        }
+        .admin-form-group {
+            margin-bottom: 10px;
+        }
+        .admin-form-group label {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 0.9rem;
+            color: #2d3748;
+        }
+        .admin-input,
+        .admin-textarea {
+            width: 100%;
+            border-radius: 8px;
+            border: 1px solid #cbd5e0;
+            padding: 8px 10px;
+            font-family: "Cairo", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            font-size: 0.9rem;
+            box-sizing: border-box;
+        }
+        .admin-textarea {
+            min-height: 110px;
+            resize: vertical;
+        }
+        .admin-button {
+            border: none;
+            border-radius: 999px;
+            padding: 8px 18px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            background: linear-gradient(90deg, #2c5aa0, #2d7840);
+            color: #fff;
+        }
+        .admin-button:hover {
+            opacity: 0.9;
+        }
+        .admin-message {
+            margin-top: 8px;
+            font-size: 0.85rem;
+        }
+        .admin-message.success {
+            color: #2f855a;
+        }
+        .admin-message.error {
+            color: #c53030;
+        }
+        .admin-list-title {
+            margin-top: 16px;
+            margin-bottom: 6px;
+            font-size: 0.95rem;
+        }
+        .admin-report-list {
+            list-style: disc;
+            padding-right: 18px;
+            font-size: 0.85rem;
+            color: #2d3748;
+        }
+        .admin-report-list li {
+            margin-bottom: 4px;
+        }
+</style>
 </head>
 <body>
 <header>
@@ -141,30 +210,159 @@
 </header>
 <main>
     <div class="container">
-        <h2 style="font-size:1.2rem;margin-bottom:8px;">مرحباً بك في لوحة التحكم</h2>
-        <p style="font-size:0.95rem;color:#4a5568;margin-bottom:20px;">
-            من هنا يمكنك إدارة المحتوى مستقبلاً (المقالات، التقارير، وغيرها). حالياً هذه الصفحة لوحة تحكم بسيطة فقط.
+        <h2 class="admin-page-title">لوحة التحكم للمحتوى</h2>
+        <p class="admin-page-subtitle">
+            من هنا يمكنك إضافة مقالات جديدة ورفع التقارير مع حمايتها بكلمة مرور.
         </p>
         <div class="cards-grid">
             <div class="admin-card-box">
-                <h2><i class="fas fa-newspaper"></i> إدارة المقالات</h2>
-                <p>في الإصدار القادم يمكن ربط هذه الصفحة بنظام إدارة للمقالات.</p>
-                <a href="../blog.html"><i class="fas fa-arrow-left"></i><span>عرض صفحة المقالات</span></a>
+                <h2><i class="fas fa-newspaper"></i> نشر مقال جديد</h2>
+                <p>اكتب عنوان المقال والمحتوى، ويمكنك إرفاق صورة اختيارية. (يتم الحفظ محلياً فقط لغرض العرض.)</p>
+                <form id="blog-form">
+                    <div class="admin-form-group">
+                        <label for="blog-title">عنوان المقال</label>
+                        <input type="text" id="blog-title" class="admin-input" required>
+                    </div>
+                    <div class="admin-form-group">
+                        <label for="blog-content">محتوى المقال</label>
+                        <textarea id="blog-content" class="admin-textarea" required></textarea>
+                    </div>
+                    <div class="admin-form-group">
+                        <label for="blog-image">صورة المقال (اختياري)</label>
+                        <input type="file" id="blog-image" class="admin-input" accept="image/*">
+                    </div>
+                    <button type="submit" class="admin-button">حفظ المقال</button>
+                </form>
+                <div id="blog-message" class="admin-message"></div>
             </div>
             <div class="admin-card-box">
-                <h2><i class="fas fa-file-alt"></i> إدارة التقارير</h2>
-                <p>في الإصدار القادم يمكن إضافة واجهة لرفع التقارير وحمايتها بكلمة مرور.</p>
-                <a href="../reports.html"><i class="fas fa-arrow-left"></i><span>عرض صفحة التقارير</span></a>
+                <h2><i class="fas fa-file-alt"></i> رفع تقرير</h2>
+                <p>قم برفع ملف التقرير وتحديد كلمة مرور خاصة به للاستخدام مستقبلاً. (الحفظ محلي على هذا المتصفح.)</p>
+                <form id="report-form">
+                    <div class="admin-form-group">
+                        <label for="report-title">عنوان التقرير</label>
+                        <input type="text" id="report-title" class="admin-input" required>
+                    </div>
+                    <div class="admin-form-group">
+                        <label for="report-file">ملف التقرير (PDF)</label>
+                        <input type="file" id="report-file" class="admin-input" accept="application/pdf" required>
+                    </div>
+                    <div class="admin-form-group">
+                        <label for="report-password">كلمة مرور التقرير</label>
+                        <input type="password" id="report-password" class="admin-input" required>
+                    </div>
+                    <button type="submit" class="admin-button">حفظ التقرير</button>
+                </form>
+                <div id="report-message" class="admin-message"></div>
+                <h3 class="admin-list-title">التقارير المحفوظة (على هذا المتصفح فقط)</h3>
+                <ul id="report-list" class="admin-report-list"></ul>
             </div>
         </div>
     </div>
 </main>
 <script>
-    // (Optional) simple client-side gate via localStorage token if you expand later
-    document.getElementById('logoutBtn').addEventListener('click', function() {
-        // clear any future login tokens here
-        window.location.href = "../index.html";
-    });
+    // زر تسجيل الخروج
+    (function () {
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function () {
+                // عند تسجيل الخروج نرجع للصفحة الرئيسية للموقع
+                window.location.href = "../index.html";
+            });
+        }
+
+        // نموذج المقال
+        const blogForm = document.getElementById('blog-form');
+        const blogMessage = document.getElementById('blog-message');
+
+        if (blogForm && blogMessage) {
+            blogForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                blogMessage.textContent = "";
+                blogMessage.classList.remove('success', 'error');
+
+                const title = (document.getElementById('blog-title').value || "").trim();
+                const content = (document.getElementById('blog-content').value || "").trim();
+
+                if (!title || !content) {
+                    blogMessage.textContent = "الرجاء تعبئة عنوان ومحتوى المقال.";
+                    blogMessage.classList.add('error');
+                    return;
+                }
+
+                const blogs = JSON.parse(localStorage.getItem('blogs') || '[]');
+                blogs.push({
+                    title: title,
+                    content: content,
+                    date: new Date().toISOString()
+                });
+                localStorage.setItem('blogs', JSON.stringify(blogs));
+
+                blogMessage.textContent = "تم حفظ المقال (محفوظ في هذا المتصفح فقط).";
+                blogMessage.classList.add('success');
+                blogForm.reset();
+                setTimeout(function () {
+                    blogMessage.textContent = "";
+                    blogMessage.classList.remove('success');
+                }, 2500);
+            });
+        }
+
+        // نموذج التقارير
+        const reportForm = document.getElementById('report-form');
+        const reportMessage = document.getElementById('report-message');
+        const reportList = document.getElementById('report-list');
+
+        function renderReports() {
+            if (!reportList) return;
+            reportList.innerHTML = "";
+            const reports = JSON.parse(localStorage.getItem('reports') || '[]');
+            reports.forEach(function (r) {
+                const li = document.createElement('li');
+                li.textContent = r.title + " — ملف: " + r.fileName + " — كلمة المرور: " + r.password;
+                reportList.appendChild(li);
+            });
+        }
+
+        if (reportForm && reportMessage && reportList) {
+            renderReports();
+            reportForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                reportMessage.textContent = "";
+                reportMessage.classList.remove('success', 'error');
+
+                const title = (document.getElementById('report-title').value || "").trim();
+                const password = (document.getElementById('report-password').value || "").trim();
+                const fileInput = document.getElementById('report-file');
+
+                if (!title || !password || !fileInput || !fileInput.files.length) {
+                    reportMessage.textContent = "الرجاء تعبئة جميع الحقول واختيار ملف.";
+                    reportMessage.classList.add('error');
+                    return;
+                }
+
+                const fileName = fileInput.files[0].name;
+
+                const reports = JSON.parse(localStorage.getItem('reports') || '[]');
+                reports.push({
+                    title: title,
+                    fileName: fileName,
+                    password: password,
+                    date: new Date().toISOString()
+                });
+                localStorage.setItem('reports', JSON.stringify(reports));
+
+                reportMessage.textContent = "تم حفظ التقرير مع كلمة المرور (محفوظ في هذا المتصفح فقط).";
+                reportMessage.classList.add('success');
+                reportForm.reset();
+                renderReports();
+                setTimeout(function () {
+                    reportMessage.textContent = "";
+                    reportMessage.classList.remove('success');
+                }, 2500);
+            });
+        }
+    })();
 </script>
 </body>
 </html>
