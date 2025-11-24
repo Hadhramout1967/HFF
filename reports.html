@@ -18,29 +18,6 @@
           <img class="brand-logo" src="assets/logo.jpg" alt="Hadhramout Future Forum">
           <div class="logo-text">
             <h1>منتدى مستقبل حضرموت</h1>
-            <p>Hadhramout Future Forum</p>
-          </div>
-        </a>
-        <nav>
-          <ul>
-            <li><a href="vision.html">الرؤية</a></li>
-            <li><a href="goals.html">الأهداف</a></li>
-            <li><a href="approach.html">آليات العمل</a></li>
-            <li><a href="philosophy.html">فلسفة الشعار</a></li>
-            <li><a href="contact.html">تواصل معنا</a></li>
-            <li><a href="blog.html">المقالات</a></li>
-            <li><a href="reports.html">التقارير</a></li>
-          </ul>
-        </nav>
-      </div>
-    </div>
-  </header>
-
-  <main class="page">
-    <div class="container">
-      <div class="section-title"><h2>التقارير</h2></div>
-      <div id="reports-list" class="cards-container"></div>
-      <p style="margin-top:16px;color:#4a5568;">يمكن تفعيل الحماية بكلمة مرور لكل تقرير عبر لوحة الإدارة <code>/admin</code> (يتطلب ربط Git + وظائف Netlify).</p>
     </div>
   </main>
 
@@ -67,24 +44,38 @@
     function buildCards(localItems, jsonItems) {
       const parts = [];
 
+      // تقارير تم إنشاؤها من لوحة التحكم (يجب رفع الملفات إلى مجلد files/reports)
       if (Array.isArray(localItems) && localItems.length) {
         localItems.forEach(function (r, idx) {
+          const title = r.title || ('تقرير #' + (idx + 1));
+          const fileName = (r.fileName || '').toString();
+          const password = (r.password || '').toString();
+          // نفترض أن الملف موجود في files/reports بنفس الاسم
+          const filePath = 'files/reports/' + encodeURIComponent(fileName);
+          const isProtected = password.trim() !== '';
+
+          const btn = isProtected
+            ? `<button class="btn" onclick="promptDownload('${filePath}','${password}')">تنزيل (محمي)</button>`
+            : `<a class="btn" href="${filePath}" download>تنزيل</a>`;
+
           parts.push(`
       <div class="card">
-        <h3>${r.title || ('تقرير #' + (idx + 1))}</h3>
-        <p>اسم الملف: ${r.fileName || 'ملف محلي'}</p>
-        <p>كلمة المرور: ${r.password || '-'}</p>
-        <p style="font-size:0.8rem;color:#718096;">هذا التقرير محفوظ محلياً في هذا المتصفح فقط ولا يمكن تنزيله مباشرة من الخادم.</p>
+        <h3>${title}</h3>
+        <p>اسم الملف: ${fileName || 'ملف'}</p>
+        ${btn}
       </div>`);
         });
       }
 
+      // تقارير معرفة مسبقاً في content/reports/reports.json
       if (Array.isArray(jsonItems) && jsonItems.length) {
         jsonItems.forEach(function (it) {
           const isProtected = !!it.protected;
+          const file = it.file || '';
+          const password = (it.password || '').toString();
           const btn = isProtected
-            ? `<button class="btn" onclick="promptDownload('${it.file}','${it.password || ''}')">تنزيل (محمي)</button>`
-            : `<a class="btn" href="${it.file}" download>تنزيل</a>`;
+            ? `<button class="btn" onclick="promptDownload('${file}','${password}')">تنزيل (محمي)</button>`
+            : `<a class="btn" href="${file}" download>تنزيل</a>`;
           parts.push(`
       <div class="card">
         <h3>${it.title || 'تقرير'}</h3>
@@ -124,5 +115,7 @@
     };
   })();
   </script>
+</body>
+</html>
 </body>
 </html>
